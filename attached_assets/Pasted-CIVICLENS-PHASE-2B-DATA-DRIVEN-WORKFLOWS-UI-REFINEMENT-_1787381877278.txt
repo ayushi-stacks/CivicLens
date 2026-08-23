@@ -1,0 +1,657 @@
+CIVICLENS — PHASE 2B
+DATA-DRIVEN WORKFLOWS + UI REFINEMENT
+
+Continue from the existing CivicLens Android project and the completed Phase 2A implementation.
+
+IMPORTANT:
+
+Before making changes, thoroughly inspect the current codebase.
+
+The existing Phase 1 UI and Phase 2A architecture are the source of truth.
+
+I have also provided a frontend-design skill in this chat.
+
+Use that skill as a DESIGN PRINCIPLE REFERENCE for improving the existing UI.
+
+Do not blindly apply web-specific instructions. Translate the relevant design principles into native Kotlin + Jetpack Compose.
+
+Continue using ONLY:
+
+- Kotlin
+- Jetpack Compose
+- Material 3
+- MVVM
+- StateFlow
+- Kotlin Coroutines
+- Room
+- Repository Pattern
+
+Do NOT migrate to Flutter or another framework.
+
+--------------------------------------------------
+PART 1 — DATA-DRIVEN CIVIC WORKFLOWS
+--------------------------------------------------
+
+Phase 2A introduced:
+
+Room
+DAOs
+Repositories
+ViewModels
+StateFlow
+Database-backed screens
+
+Now make the main CivicLens workflows properly functional.
+
+Architecture:
+
+User Action
+↓
+ViewModel
+↓
+Repository
+↓
+Room
+↓
+Flow / StateFlow
+↓
+Compose UI
+
+Do not manually refresh screens when Room can provide reactive updates.
+
+--------------------------------------------------
+1. REPORT ISSUE
+--------------------------------------------------
+
+Use the existing Report screen.
+
+Do NOT implement real CameraX, GPS or ML Kit yet.
+
+Use the existing mock/demo detection values.
+
+When "Confirm & Submit" is pressed:
+
+- create an Issue in Room
+- generate a unique issue ID
+- save category
+- save description
+- save image URI
+- save demo latitude/longitude
+- save demo address
+- save confidence
+- set status to PENDING_VERIFICATION
+- set verificationCount to 0
+- set isSynced appropriately
+
+Then:
+
+- increment user's issuesReported
+- award Civic Points
+- create an Activity
+- update StateFlow
+- navigate through the existing flow
+
+The new issue must become visible wherever appropriate without restarting the app.
+
+--------------------------------------------------
+2. DUPLICATE REPORT PROTECTION
+--------------------------------------------------
+
+Before creating an issue, perform a simple local duplicate check.
+
+If an issue with the same category exists within approximately 50 meters, treat it as a possible duplicate.
+
+Show a CivicLens-styled confirmation:
+
+"Possible existing issue nearby"
+
+Actions:
+
+"View Existing Issue"
+
+"Submit Anyway"
+
+Do not create a completely new visual system for this.
+
+Keep it consistent with the existing UI.
+
+Do not implement image similarity yet.
+
+--------------------------------------------------
+3. ISSUE DETAILS
+--------------------------------------------------
+
+Make Issue Details fully Room-backed.
+
+Load by issue ID.
+
+Display existing fields:
+
+- category
+- description
+- status
+- location
+- confidence
+- verification count
+- resolution confidence
+- created date
+
+Changes must automatically appear through StateFlow.
+
+Do not manually reload the application.
+
+--------------------------------------------------
+4. VERIFICATION
+--------------------------------------------------
+
+Use the existing Verification screen.
+
+When the user chooses:
+
+"Yes, still there"
+"No, it's resolved"
+"Not Sure"
+
+and submits:
+
+- create Verification
+- associate issue
+- associate current user
+- save result
+- save comment
+- save timestamp
+- increment verificationCount
+- recalculate confidence
+- increment user's issuesVerified
+- award Civic Points
+- create Activity
+
+Prevent duplicate verification by the same user for the same issue.
+
+Update Issue Details automatically.
+
+--------------------------------------------------
+5. VERIFICATION CONFIDENCE
+--------------------------------------------------
+
+Use a simple deterministic calculation:
+
+positive verifications / total valid verifications × 100
+
+Handle zero safely.
+
+Do not implement advanced statistical intelligence yet.
+
+--------------------------------------------------
+6. ISSUE STATUS
+--------------------------------------------------
+
+Use:
+
+PENDING_VERIFICATION
+VERIFIED
+IN_PROGRESS
+RESOLVED
+
+Allow an issue to become VERIFIED when the local verification threshold is reached.
+
+Do not implement municipal backend logic yet.
+
+--------------------------------------------------
+7. CIVIC POINTS
+--------------------------------------------------
+
+Centralize Civic Point calculations.
+
+Do not scatter point values across Composables.
+
+Use:
+
+Accepted report: +50
+Verification: +20
+High-quality report bonus: +30
+Resolution confirmation: +25
+
+Make these values easy to modify later.
+
+When points change:
+
+- update User
+- update Profile
+- update Home
+- create Activity
+
+Points must never become negative.
+
+--------------------------------------------------
+8. ACTIVITY
+--------------------------------------------------
+
+Activity must be completely database-backed.
+
+Create activities for:
+
+- reports
+- verifications
+- resolution confirmations
+- Civic Point rewards
+
+Sort newest first.
+
+Use the existing Activity UI.
+
+Do not hardcode new activities in Composables.
+
+--------------------------------------------------
+9. HOME REACTIVITY
+--------------------------------------------------
+
+Home must react automatically.
+
+When a report is created:
+
+- Issues Near You updates
+- Civic Points updates
+- Recent Activity updates
+
+When a verification is submitted:
+
+- verification-related counts update
+- Civic Points update
+- Recent Activity updates
+
+No app restart.
+
+No unnecessary manual refresh.
+
+--------------------------------------------------
+10. PROFILE REACTIVITY
+--------------------------------------------------
+
+Update automatically:
+
+- Civic Points
+- Level
+- Issues Reported
+- Issues Verified
+- Issues Resolved
+
+Use:
+
+Level 1: 0+
+Level 2: 250+
+Level 3: 500+
+Level 4: 1000+
+Level 5: 2000+
+
+Preserve the existing Profile design.
+
+--------------------------------------------------
+11. MAP FOUNDATION
+--------------------------------------------------
+
+Do NOT implement Google Maps yet.
+
+However, make the existing map screen use Room issue data where practical.
+
+Newly created issues should appear in the local issue list/map representation automatically.
+
+Keep the existing map visual style until the real Google Maps implementation is added.
+
+--------------------------------------------------
+12. RESOLUTION
+--------------------------------------------------
+
+Make the existing Resolution screen read from Room.
+
+Load:
+
+- before image
+- after image
+- municipal remark
+- resolved by
+- resolved date
+- confidence
+
+Use:
+
+ResolutionViewModel
+→ ResolutionRepository
+→ Room
+
+Do not redesign the existing resolution UI.
+
+--------------------------------------------------
+13. RESOLUTION CONFIRMATION
+--------------------------------------------------
+
+If the current UI already allows citizen confirmation of a repair:
+
+- update the issue
+- update issuesResolved
+- award Civic Points
+- create Activity
+- update Home
+- update Profile
+
+Do not invent a completely new resolution system.
+
+--------------------------------------------------
+PART 2 — UI REFINEMENT
+--------------------------------------------------
+
+Now improve the existing CivicLens UI.
+
+IMPORTANT:
+
+Do NOT rebuild the UI from scratch.
+
+Do NOT make it look like a generic AI-generated dashboard.
+
+The screenshots from Phase 1 show the current visual direction.
+
+Keep the existing CivicLens identity:
+
+- dark navy environment
+- cyan/turquoise primary accent
+- green success
+- amber warning
+- red issue states
+- rounded cards
+- civic-tech aesthetic
+- central Report action
+
+The goal is:
+
+EXISTING GOOD DESIGN
++
+BETTER HIERARCHY
++
+BETTER CONTRAST
++
+BETTER SPACING
++
+BETTER MICRO-INTERACTIONS
+
+--------------------------------------------------
+14. DESIGN REVIEW FIRST
+--------------------------------------------------
+
+Before modifying UI, inspect all existing Compose screens and identify:
+
+- weak contrast
+- inconsistent spacing
+- excessive repeated card shapes
+- typography hierarchy problems
+- unnecessary decoration
+- awkward alignment
+- weak interaction feedback
+- placeholder-looking components
+- inconsistent icon treatment
+- navigation inconsistencies
+
+Do not make changes simply for the sake of changing things.
+
+Every visual change should improve usability or visual identity.
+
+--------------------------------------------------
+15. HOME UI
+--------------------------------------------------
+
+Refine the Home screen.
+
+Especially improve the Infrastructure Health Index card.
+
+The score "72 / 100" should have strong visual hierarchy.
+
+Ensure all text has sufficient contrast against the card background.
+
+Keep the existing cyan/green visual language.
+
+Make:
+
+- score
+- health status
+- supporting metrics
+- recent activity
+
+feel like one coherent information hierarchy.
+
+Do not overcrowd the screen.
+
+--------------------------------------------------
+16. PROFILE UI
+--------------------------------------------------
+
+Refine the Profile screen while preserving its current structure.
+
+Improve:
+
+- profile header hierarchy
+- Civic Points card
+- impact statistics
+- badges
+- leaderboard
+
+Make the user's Civic Points feel like an important achievement without making the screen look gamified or childish.
+
+Keep the existing trophy/achievement language.
+
+--------------------------------------------------
+17. ACTIVITY UI
+--------------------------------------------------
+
+Refine Activity.
+
+Make the distinction between:
+
+Recent Activity
+and
+Earlier
+
+clearer.
+
+Improve:
+
+- timestamps
+- status labels
+- activity icons
+- spacing
+- hierarchy
+
+Keep the current card-based structure.
+
+Avoid excessive decoration.
+
+--------------------------------------------------
+18. REPORT UI
+--------------------------------------------------
+
+The Report screen currently contains a mock image/detection area.
+
+Make this area feel intentional and polished even though real CameraX is not implemented yet.
+
+The placeholder should look like a deliberate CivicLens preview state rather than an unfinished scaffold.
+
+Keep:
+
+AI Detection Result
+Pothole
+Confidence
+Location
+Confirm & Submit
+Retake Photo
+
+Make the primary action visually dominant.
+
+--------------------------------------------------
+19. MAP UI
+--------------------------------------------------
+
+Until Google Maps is implemented, improve the existing simulated map presentation.
+
+It should feel like a civic infrastructure map rather than a generic decorative map.
+
+Use:
+
+- clear issue markers
+- consistent issue colors
+- subtle map grid/details
+- clear nearby issue cards
+
+Do not overdecorate it.
+
+The map should remain visually secondary to the actual issue information.
+
+--------------------------------------------------
+20. DESIGN SYSTEM CONSISTENCY
+--------------------------------------------------
+
+Create or refine shared Compose components where appropriate.
+
+Examples:
+
+CivicLensCard
+CivicLensButton
+CivicLensStatusChip
+CivicLensSectionHeader
+CivicLensStatCard
+CivicLensBottomNavigation
+
+Do NOT create components unnecessarily.
+
+Reuse existing components if they already exist.
+
+Keep spacing, corner radii, typography and colors consistent.
+
+--------------------------------------------------
+21. MICRO-INTERACTIONS
+--------------------------------------------------
+
+Add subtle, purposeful interactions.
+
+Examples:
+
+- button press feedback
+- card press feedback
+- smooth StateFlow-driven updates
+- subtle screen transitions
+- smooth status changes
+- animated Civic Point changes where appropriate
+
+Do not add excessive animations.
+
+Avoid making the app feel like a flashy demo.
+
+The motion should support the civic workflow.
+
+--------------------------------------------------
+22. LOADING / EMPTY / ERROR STATES
+--------------------------------------------------
+
+Create polished CivicLens-specific states.
+
+Loading:
+Use subtle dark-theme loading indicators.
+
+Empty:
+Explain what the user can do next.
+
+Error:
+Clearly explain what went wrong and what action is available.
+
+Do not show raw exceptions.
+
+Do not use generic default Android error screens.
+
+--------------------------------------------------
+23. ACCESSIBILITY + QUALITY
+--------------------------------------------------
+
+Maintain:
+
+- readable contrast
+- touch-friendly controls
+- meaningful content descriptions
+- scalable text
+- clear selected/unselected navigation states
+
+Do not sacrifice usability for aesthetics.
+
+--------------------------------------------------
+24. OFFLINE FOUNDATION
+--------------------------------------------------
+
+Reports created during this phase must work without a network connection.
+
+Save locally to Room.
+
+Use isSynced appropriately.
+
+Do NOT implement WorkManager or backend synchronization yet.
+
+Prepare the architecture for future synchronization.
+
+--------------------------------------------------
+25. FINAL TEST
+--------------------------------------------------
+
+Test this complete flow:
+
+Launch
+→ Home
+→ Report
+→ Submit
+→ Issue created
+→ Civic Points update
+→ Activity update
+→ Home update
+→ Profile update
+→ Issue Details
+→ Verification
+→ Confidence update
+→ Civic Points update
+→ Activity update
+→ Close app
+→ Reopen app
+→ Data still exists
+
+Also verify:
+
+- no duplicate seed data
+- no crashes
+- navigation works
+- StateFlow updates work
+- Room persistence works
+- UI remains polished
+- APK builds successfully
+
+Run:
+
+./gradlew assembleDebug
+
+Fix all build errors.
+
+Generate a new debug APK.
+
+DO NOT START PHASE 3.
+
+At the end, report:
+
+1. Data workflows implemented.
+2. UI improvements made.
+3. Room changes.
+4. ViewModel changes.
+5. New/reused Compose components.
+6. Build status.
+7. APK path.
+
+MOST IMPORTANT:
+
+The existing uploaded Phase 1 codebase is the source of truth.
+
+Preserve what already works.
+
+Improve what genuinely needs improvement.
+
+Do not redesign CivicLens into a different product.

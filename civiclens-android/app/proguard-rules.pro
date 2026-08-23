@@ -1,0 +1,1 @@
+# CivicLens application-specific ProGuard rules.

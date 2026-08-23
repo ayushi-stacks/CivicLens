@@ -1,0 +1,241 @@
+PHASE 2B — COMPLETE CIVICLENS UI REIMAGINATION
+
+IMPORTANT: DO NOT “REFINE”, “POLISH”, OR SLIGHTLY MODIFY THE EXISTING UI.
+
+The current CivicLens UI is NOT the design direction going forward. I want you to completely rethink and redesign the visual experience from scratch while keeping the existing Phase 2A functionality and Kotlin + Jetpack Compose architecture working.
+
+Treat the current screens only as a functional reference for what features exist. Do NOT copy their layout, card structure, spacing, navigation style, colors, or visual hierarchy.
+
+DESIGN GOAL
+
+CivicLens should feel like a premium, modern civic-tech product designed by a professional product designer.
+
+It should NOT look like a typical Android app.
+
+Think beyond conventional:
+- bottom navigation bars
+- rows of rectangular cards
+- generic dashboard layouts
+- cyan buttons
+- dark navy backgrounds everywhere
+- repetitive rounded cards
+- “title + subtitle + card” layouts
+- excessive badges and statistics
+- standard Material-looking components
+
+I want you to THINK OUTSIDE THE BOX.
+
+Take inspiration from premium products such as:
+- modern fintech apps
+- high-end mobility apps
+- Apple-level information hierarchy
+- modern map products
+- editorial / magazine interfaces
+- premium data visualization products
+- futuristic civic technology
+- spatial interfaces
+- minimalist luxury digital products
+
+Do NOT copy any of these products. Use them only as design inspiration.
+
+THE APP SHOULD FEEL:
+
+Premium
+Modern
+Intelligent
+Human
+Civic
+Trustworthy
+Visually distinctive
+Highly intentional
+Slightly futuristic
+Easy to use
+
+A person should open CivicLens and immediately feel that this is a serious, beautifully designed product, not a college-project Android dashboard.
+
+COMPLETELY RETHINK THE INFORMATION ARCHITECTURE
+
+You are allowed to rethink how information is presented.
+
+You can introduce:
+- floating elements
+- contextual controls
+- large editorial typography
+- asymmetric layouts
+- immersive map experiences
+- progressive disclosure
+- gesture-oriented interactions
+- floating action surfaces
+- visual data storytelling
+- interactive statistics
+- timelines
+- spatial UI
+- intelligent filters
+- bottom sheets
+- expandable sections
+- layered interfaces
+- contextual menus
+- micro-interactions
+- subtle motion
+
+Do not add complexity just for decoration. Every interaction must have a purpose.
+
+IMPORTANT UI RULE:
+
+Do not make every piece of information its own card.
+
+The current design has too many boxes and feels like a dashboard. Break that pattern completely.
+
+Use hierarchy, whitespace, typography, imagery, dividers, floating surfaces and visual grouping instead.
+
+REDESIGN EVERY MAJOR SCREEN
+
+Completely redesign:
+
+1. Home
+2. Map
+3. Report Issue
+4. Activity
+5. Profile
+6. Issue details
+7. Any supporting screens already implemented
+
+The redesign must feel like ONE cohesive product, not five different screens.
+
+NAVIGATION
+
+Reconsider the existing bottom navigation.
+
+You are NOT required to keep the current five-item bottom navigation.
+
+Explore a more modern navigation model if appropriate.
+
+However, navigation must remain extremely intuitive for a normal Android user.
+
+Do not sacrifice usability merely to look different.
+
+REPORTING EXPERIENCE
+
+The Report Issue flow should feel like one of the app’s signature experiences.
+
+Make it feel fast and intelligent.
+
+The user should be able to:
+
+Capture/upload evidence
+Understand what CivicLens detected
+See location
+Review the issue
+Confirm submission
+Understand what happens next
+
+Use a beautiful, focused reporting experience rather than a form filled with boxes.
+
+MAP EXPERIENCE
+
+The map should feel like a major product surface, not a decorative rectangle.
+
+Think of CivicLens as a living map of the city.
+
+Issues should have visual meaning.
+
+Different states such as:
+- verified
+- pending
+- resolved
+- nearby
+- urgent
+
+should be visually understandable without relying on repetitive text badges.
+
+PROFILE
+
+Do not recreate the current “profile dashboard”.
+
+Think about how a civic contributor's identity, reputation, impact and achievements could be presented in a much more elegant way.
+
+Activity
+
+Do not recreate the existing activity screen.
+
+Think about it as a civic timeline / personal contribution history rather than a list of cards.
+
+Show the user's journey and impact in a visually interesting way.
+
+VISUAL SYSTEM
+
+Create a completely new visual language for CivicLens.
+
+You may change:
+- colors
+- typography
+- spacing
+- component shapes
+- navigation
+- icon treatment
+- backgrounds
+- surfaces
+- hierarchy
+- animations
+- interaction patterns
+
+Do NOT feel obligated to preserve the current dark navy + cyan card-based appearance.
+
+If a completely different palette produces a better product, use it.
+
+ANDROID QUALITY
+
+The result must still feel like a real Android application.
+
+Respect:
+- system status bar
+- navigation/insets
+- safe areas
+- accessibility
+- touch targets
+- responsive layouts
+- different screen sizes
+
+The current scaffold/status-bar overlap must be completely eliminated throughout the application.
+
+No content may sit underneath or collide with the Android status bar.
+
+IMPLEMENTATION
+
+Continue using:
+
+Kotlin
+Jetpack Compose
+Android native architecture
+
+Do not migrate to Flutter, React Native, XML layouts, or another framework.
+
+Preserve the existing Phase 2A functionality.
+
+Do not break working features just to redesign them.
+
+The UI redesign should be implemented in the actual application, not merely described.
+
+MOST IMPORTANT:
+
+DO NOT SHOW ME THE SAME UI WITH DIFFERENT COLORS.
+
+DO NOT MOVE THE SAME CARDS AROUND.
+
+DO NOT CALL A SMALL REDESIGN A “REIMAGINATION”.
+
+I want a genuinely different visual concept.
+
+Before implementing, THINK DEEPLY about what would make CivicLens visually distinctive from ordinary Android applications.
+
+You have creative freedom.
+
+If the existing design is the obvious solution, deliberately move away from it.
+
+Build something that makes someone say:
+
+“Wait, this is a civic reporting app?”
+
+That is the level of visual differentiation I want.
+
+After redesigning, run/build the application and verify that all major screens work correctly and that there are no scaffold, status-bar, navigation, overflow, or layout issues.
