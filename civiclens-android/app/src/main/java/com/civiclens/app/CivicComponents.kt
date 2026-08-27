@@ -7,6 +7,7 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -26,7 +27,6 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Assignment
 import androidx.compose.material.icons.filled.DarkMode
@@ -48,6 +48,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
@@ -164,32 +165,59 @@ private fun BottomNavBar(navController: NavHostController, selectedRoute: String
     Surface(
         modifier = Modifier
             .navigationBarsPadding()
-            .padding(horizontal = 16.dp, vertical = 10.dp)
-            .clip(RoundedCornerShape(26.dp)),
-        color = CivicColors.NavyRaised,
-        shadowElevation = 10.dp,
+            .padding(horizontal = 22.dp, vertical = 10.dp),
+        color = Color.Transparent,
+        shadowElevation = 0.dp,
     ) {
         BoxWithConstraints(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(66.dp)
-                .padding(horizontal = 8.dp),
+                .height(88.dp),
         ) {
             val itemWidth = maxWidth / 5f
             val indicatorOffset by animateDpAsState(
-                targetValue = itemWidth * selectedIndex.toFloat() + (itemWidth - 50.dp) / 2f,
+                targetValue = itemWidth * selectedIndex.toFloat() + (itemWidth - 70.dp) / 2f,
                 animationSpec = spring(dampingRatio = .72f, stiffness = 420f),
                 label = "bottom-nav-indicator",
             )
             Box(
                 Modifier
-                    .offset(x = indicatorOffset, y = 7.dp)
-                    .size(50.dp)
-                    .clip(CircleShape)
-                    .background(CivicColors.Cyan),
+                    .align(Alignment.BottomCenter)
+                    .fillMaxWidth()
+                    .height(64.dp)
+                    .clip(RoundedCornerShape(36.dp))
+                    .background(CivicColors.NavPill),
             )
+            Box(
+                Modifier
+                    .offset(x = indicatorOffset, y = 0.dp)
+                    .size(70.dp)
+                    .clip(CircleShape)
+                    .background(CivicColors.Navy),
+            )
+            Box(
+                Modifier
+                    .offset(x = indicatorOffset + 6.dp, y = 6.dp)
+                    .size(58.dp)
+                    .clip(CircleShape)
+                    .background(CivicColors.Cyan)
+                    .border(6.dp, CivicColors.Navy, CircleShape),
+                contentAlignment = Alignment.Center,
+            ) {
+                val selectedIcon = when (selectedRoute) {
+                    Routes.Map -> Icons.Default.Map
+                    Routes.Activity -> Icons.Default.Assignment
+                    Routes.Profile -> Icons.Default.Person
+                    else -> Icons.Default.Home
+                }
+                Icon(selectedIcon, selectedRoute, tint = CivicColors.Navy, modifier = Modifier.size(24.dp))
+            }
             Row(
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .fillMaxWidth()
+                    .height(64.dp)
+                    .padding(horizontal = 8.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceAround,
             ) {
@@ -201,13 +229,14 @@ private fun BottomNavBar(navController: NavHostController, selectedRoute: String
                 }
                 Box(
                     modifier = Modifier
-                        .size(54.dp)
+                        .size(58.dp)
                         .clip(CircleShape)
-                        .background(CivicColors.Text)
+                        .background(CivicColors.Text.copy(alpha = if (CivicColors.useDarkMode) .92f else .96f))
+                        .border(6.dp, CivicColors.NavPill, CircleShape)
                         .clickable { navController.navigate(Routes.Report) },
                     contentAlignment = Alignment.Center,
                 ) {
-                    Icon(Icons.Default.Report, "Report issue", tint = CivicColors.Navy, modifier = Modifier.size(23.dp))
+                    Icon(Icons.Default.Report, "Report issue", tint = CivicColors.Navy, modifier = Modifier.size(24.dp))
                 }
                 BottomNavItem("Activity", Icons.Default.Assignment, selectedRoute == Routes.Activity) {
                     navController.navigate(Routes.Activity) { launchSingleTop = true }
@@ -222,23 +251,20 @@ private fun BottomNavBar(navController: NavHostController, selectedRoute: String
 
 @Composable
 private fun BottomNavItem(label: String, icon: androidx.compose.ui.graphics.vector.ImageVector, selected: Boolean, onClick: () -> Unit) {
-    val scale by animateFloatAsState(if (selected) 1.08f else 1f, label = "bottom-nav-scale")
-    Column(
+    val scale by animateFloatAsState(if (selected) .6f else 1f, label = "bottom-nav-scale")
+    Box(
         modifier = Modifier
             .width(56.dp)
-            .height(58.dp)
+            .height(54.dp)
             .clickable(onClick = onClick),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
+        contentAlignment = Alignment.Center,
     ) {
         Icon(
             icon,
             label,
-            tint = if (selected) CivicColors.Navy else CivicColors.MutedDark,
-            modifier = Modifier.size(21.dp).scale(scale),
+            tint = if (selected) Color.Transparent else CivicColors.NavIcon,
+            modifier = Modifier.size(23.dp).scale(scale),
         )
-        Spacer(Modifier.height(4.dp))
-        Text(label, color = if (selected) CivicColors.Text else CivicColors.MutedDark, fontSize = 10.sp, fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal)
     }
 }
 
@@ -289,6 +315,124 @@ fun GlassCard(modifier: Modifier = Modifier, content: @Composable ColumnScope.()
             .padding(17.dp),
         content = content,
     )
+}
+
+@Composable
+fun CivicHeroSurface(
+    modifier: Modifier = Modifier,
+    accent: Color = CivicColors.Cyan,
+    content: @Composable BoxScope.() -> Unit,
+) {
+    Box(
+        modifier = modifier
+            .clip(RoundedCornerShape(26.dp))
+            .background(CivicColors.Panel)
+            .border(1.dp, CivicColors.Border.copy(alpha = .45f), RoundedCornerShape(26.dp))
+            .drawBehind {
+                drawCircle(
+                    color = accent.copy(alpha = if (CivicColors.useDarkMode) .18f else .12f),
+                    radius = size.maxDimension * .55f,
+                    center = Offset(size.width * .92f, size.height * .04f),
+                )
+                drawCircle(
+                    color = CivicColors.Lime.copy(alpha = if (CivicColors.useDarkMode) .1f else .13f),
+                    radius = size.maxDimension * .42f,
+                    center = Offset(size.width * .15f, size.height * 1.05f),
+                )
+            }
+            .padding(18.dp),
+        content = content,
+    )
+}
+
+@Composable
+fun EditorialHeader(
+    eyebrow: String,
+    title: String,
+    subtitle: String? = null,
+    modifier: Modifier = Modifier,
+    action: @Composable () -> Unit = {},
+) {
+    Row(modifier.fillMaxWidth(), verticalAlignment = Alignment.Top) {
+        Column(Modifier.weight(1f)) {
+            Text(eyebrow, color = CivicColors.CyanBright, fontSize = 13.sp, fontWeight = FontWeight.Bold)
+            Spacer(Modifier.height(8.dp))
+            Text(title, color = CivicColors.Text, fontSize = 28.sp, fontWeight = FontWeight.Bold, lineHeight = 32.sp)
+            if (subtitle != null) {
+                Spacer(Modifier.height(6.dp))
+                Text(subtitle, color = CivicColors.Muted, fontSize = 12.sp, lineHeight = 18.sp)
+            }
+        }
+        action()
+    }
+}
+
+@Composable
+fun OpenMetric(value: String, label: String, tint: Color, modifier: Modifier = Modifier) {
+    Column(modifier.padding(vertical = 4.dp)) {
+        Text(value, color = tint, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+        Text(label, color = CivicColors.Muted, fontSize = 10.sp, lineHeight = 13.sp)
+    }
+}
+
+@Composable
+fun CivicDivider(modifier: Modifier = Modifier) {
+    Box(modifier.fillMaxWidth().height(1.dp).background(CivicColors.Border.copy(alpha = .55f)))
+}
+
+@Composable
+fun IssueLine(issue: CivicIssue, onClick: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box(
+            Modifier
+                .size(10.dp)
+                .clip(CircleShape)
+                .background(issue.statusColor),
+        )
+        Spacer(Modifier.width(14.dp))
+        Column(Modifier.weight(1f)) {
+            Text(issue.title, color = CivicColors.Text, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+            Spacer(Modifier.height(2.dp))
+            Text(issue.location, color = CivicColors.Muted, fontSize = 10.sp, maxLines = 1)
+        }
+        StatusChip(issue.status, issue.statusColor)
+    }
+}
+
+@Composable
+fun TimelineEntry(
+    title: String,
+    subtitle: String,
+    points: String,
+    tint: Color,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit = {},
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(vertical = 13.dp),
+        verticalAlignment = Alignment.Top,
+    ) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Box(Modifier.size(13.dp).clip(CircleShape).background(tint))
+            Box(Modifier.width(1.dp).height(44.dp).background(tint.copy(alpha = .28f)))
+        }
+        Spacer(Modifier.width(14.dp))
+        Column(Modifier.weight(1f)) {
+            Text(title, color = CivicColors.Text, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+            Spacer(Modifier.height(4.dp))
+            Text(subtitle, color = CivicColors.Muted, fontSize = 10.sp, lineHeight = 15.sp)
+        }
+        Text(points, color = tint, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+    }
 }
 
 @Composable

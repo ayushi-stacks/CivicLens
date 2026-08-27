@@ -21,12 +21,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.Bolt
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.Groups
@@ -161,45 +158,50 @@ fun HomeScreen(navController: NavHostController, viewModel: HomeViewModel = view
         )
     }
     ScreenScaffold(navController, Routes.Home) { padding ->
-        Column(Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState()).padding(horizontal = 18.dp)) {
-            Row(Modifier.fillMaxWidth().padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-                Column(Modifier.weight(1f)) {
-                    Text("CivicLens", color = CivicColors.CyanBright, fontSize = 16.sp, fontWeight = FontWeight.Bold)
-                    Spacer(Modifier.height(12.dp))
-                    Text("Hello, ${user.user?.name?.substringBefore(" ") ?: "Ayushi"}", color = CivicColors.Text, fontSize = 20.sp, fontWeight = FontWeight.SemiBold)
-                    Text("Let's make our city better together.", color = CivicColors.Muted, fontSize = 11.sp)
-                }
+        Column(
+            Modifier
+                .fillMaxSize()
+                .padding(padding)
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 20.dp),
+        ) {
+            EditorialHeader(
+                eyebrow = "CivicLens",
+                title = "Good morning,\n${user.user?.name?.substringBefore(" ") ?: "Ayushi"}",
+                subtitle = "Kolkata looks better when citizens and city teams see the same truth.",
+                modifier = Modifier.padding(top = 8.dp),
+            ) {
                 ThemeToggleButton()
                 IconButton(onClick = { showNotifications = true }) { Icon(Icons.Default.NotificationsNone, "Notifications", tint = CivicColors.Text) }
-                Avatar(Modifier.size(34.dp))
+                Avatar(Modifier.size(38.dp))
             }
-            Spacer(Modifier.height(18.dp))
+            Spacer(Modifier.height(24.dp))
             HealthCard(issues)
-            Spacer(Modifier.height(14.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                StatTile(issues.size.toString(), "Issues Near You", CivicColors.Coral, Modifier.weight(1f))
-                StatTile(issues.count { it.status == IssueStatus.PENDING_VERIFICATION }.toString(), "Pending Verifications", CivicColors.CyanBright, Modifier.weight(1f))
+            Spacer(Modifier.height(20.dp))
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                OpenMetric(issues.size.toString(), "near you", CivicColors.Coral)
+                OpenMetric(issues.count { it.status == IssueStatus.PENDING_VERIFICATION }.toString(), "need checks", CivicColors.Amber)
+                OpenMetric((user.user?.civicPoints ?: 0).toString(), "points", CivicColors.Cyan)
+                OpenMetric((user.user?.issuesResolved ?: 0).toString(), "resolved", CivicColors.Green)
             }
-            Spacer(Modifier.height(10.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                StatTile((user.user?.civicPoints ?: 0).toString(), "Civic Points", CivicColors.Amber, Modifier.weight(1f))
-                StatTile((user.user?.issuesResolved ?: 0).toString(), "Issues Resolved", CivicColors.Lime, Modifier.weight(1f))
-            }
-            Spacer(Modifier.height(22.dp))
-            SectionHeader("Recent Activity", "View All") { navController.navigate(Routes.Activity) }
+            Spacer(Modifier.height(28.dp))
+            SectionHeader("Civic story", "View all") { navController.navigate(Routes.Activity) }
             Spacer(Modifier.height(10.dp))
             activities.take(2).forEach { activity ->
-                IssueRow(activity.toCivicIssue()) { navController.navigate("${Routes.IssueDetails}/${activity.issueId ?: 1}") }
-                Spacer(Modifier.height(9.dp))
+                TimelineEntry(
+                    title = activity.title,
+                    subtitle = "${activity.description} - ${formatCivicDate(activity.timestamp)}",
+                    points = "+${activity.points}",
+                    tint = activity.toCivicIssue().statusColor,
+                ) { navController.navigate("${Routes.IssueDetails}/${activity.issueId ?: 1}") }
             }
-            Spacer(Modifier.height(14.dp))
+            CivicDivider()
+            Spacer(Modifier.height(18.dp))
             SectionHeader("Nearby Issues", "Open map") { navController.navigate(Routes.Map) }
-            Spacer(Modifier.height(10.dp))
             issues.take(2).forEach { issue ->
-                IssueRow(issue.toCivicIssue()) { navController.navigate("${Routes.IssueDetails}/${issue.id}") }
-                Spacer(Modifier.height(9.dp))
+                IssueLine(issue.toCivicIssue()) { navController.navigate("${Routes.IssueDetails}/${issue.id}") }
             }
-            Spacer(Modifier.height(20.dp))
+            Spacer(Modifier.height(112.dp))
         }
     }
 }
@@ -219,20 +221,18 @@ private fun HealthCard(issues: List<IssueEntity>) {
         score >= 65 -> "Good"
         else -> "Needs attention"
     }
-    GlassCard(
-        Modifier
-            .fillMaxWidth()
-            .background(CivicColors.Lime.copy(alpha = .12f), RoundedCornerShape(18.dp)),
-    ) {
+    CivicHeroSurface(Modifier.fillMaxWidth().height(184.dp), accent = CivicColors.Cyan) {
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.Top) {
             Column {
-                Text("CITY HEALTH INDEX", color = CivicColors.Text, fontSize = 10.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.2.sp)
-                Spacer(Modifier.height(5.dp))
+                Text("City health index", color = CivicColors.Muted, fontSize = 12.sp, fontWeight = FontWeight.Medium)
+                Spacer(Modifier.height(10.dp))
                 Row(verticalAlignment = Alignment.Bottom) {
-                Text(score.toString(), color = CivicColors.Text, fontSize = 38.sp, fontWeight = FontWeight.Bold)
-                Text(" / 100", color = CivicColors.Muted, fontSize = 12.sp, modifier = Modifier.padding(bottom = 7.dp))
+                    Text(score.toString(), color = CivicColors.Text, fontSize = 52.sp, fontWeight = FontWeight.Bold)
+                    Text("/100", color = CivicColors.Muted, fontSize = 14.sp, modifier = Modifier.padding(bottom = 11.dp, start = 4.dp))
                 }
-                Text(healthLabel, color = CivicColors.Cyan, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                Text(healthLabel, color = CivicColors.Cyan, fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                Spacer(Modifier.height(22.dp))
+                Text("Signals from reports, verifications, and resolved issues.", color = CivicColors.Muted, fontSize = 11.sp, lineHeight = 16.sp)
             }
             CanvasSparkline()
         }
@@ -253,6 +253,7 @@ private fun CanvasSparkline() {
 fun ReportIssueScreen(navController: NavHostController, viewModel: ReportViewModel = viewModel()) {
     var possibleDuplicateId by remember { mutableStateOf<Long?>(null) }
     var scanIndex by remember { mutableStateOf(0) }
+    var details by remember { mutableStateOf("") }
     val scanOptions = listOf(
         Triple("Pothole", "Confidence: 95%", "Ballygunge Circular Rd, Kolkata"),
         Triple("Overflowing waste", "Confidence: 88%", "Hazra Road, Kolkata"),
@@ -281,32 +282,69 @@ fun ReportIssueScreen(navController: NavHostController, viewModel: ReportViewMod
         )
     }
     ScreenScaffold(navController, Routes.Report, "Report New Issue", true, { IconButton(onClick = { scanIndex = (scanIndex + 1) % scanOptions.size }) { Icon(Icons.Default.Bolt, "AI detection", tint = CivicColors.Cyan) } }) { padding ->
-        Column(Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState()).padding(horizontal = 18.dp)) {
-            FakePhotoCard(Modifier.fillMaxWidth().height(255.dp), label = "DEMO PREVIEW - AI READY")
-            Spacer(Modifier.height(13.dp))
-            GlassCard(Modifier.fillMaxWidth()) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Box(Modifier.size(34.dp).clip(RoundedCornerShape(10.dp)).background(CivicColors.Cyan.copy(alpha = .2f)), contentAlignment = Alignment.Center) {
-                        Icon(Icons.Default.SmartToy, null, tint = CivicColors.Cyan, modifier = Modifier.size(20.dp))
-                    }
-                    Spacer(Modifier.width(11.dp))
-                    Column(Modifier.weight(1f)) {
-                        Text("AI Detection Result", color = CivicColors.Muted, fontSize = 10.sp)
-                        Text(scan.first, color = CivicColors.Text, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
-                        Text(scan.second, color = CivicColors.Muted, fontSize = 10.sp)
-                    }
-                    Icon(Icons.Default.CheckCircle, null, tint = CivicColors.Green)
-                }
-                Spacer(Modifier.height(16.dp))
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.Place, null, tint = CivicColors.Text, modifier = Modifier.size(19.dp))
-                    Spacer(Modifier.width(8.dp))
-                    Column {
-                        Text("Location", color = CivicColors.Muted, fontSize = 10.sp)
-                        Text(scan.third, color = CivicColors.Text, fontSize = 12.sp)
+        Column(
+            Modifier
+                .fillMaxSize()
+                .padding(padding)
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 18.dp),
+        ) {
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                listOf("Capture", "Review", "Location", "Submit").forEachIndexed { index, label ->
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Box(Modifier.size(30.dp).clip(CircleShape).background(if (index <= 2) CivicColors.Cyan else CivicColors.PanelMuted), contentAlignment = Alignment.Center) {
+                            Icon(if (index == 0) Icons.Default.CameraAlt else Icons.Default.CheckCircle, null, tint = if (index <= 2) CivicColors.Navy else CivicColors.MutedDark, modifier = Modifier.size(15.dp))
+                        }
+                        Spacer(Modifier.height(5.dp))
+                        Text(label, color = if (index <= 2) CivicColors.Text else CivicColors.MutedDark, fontSize = 9.sp)
                     }
                 }
             }
+            Spacer(Modifier.height(18.dp))
+            Box(Modifier.fillMaxWidth().height(288.dp)) {
+                FakePhotoCard(Modifier.fillMaxSize(), label = "Tap to capture or upload")
+                Box(Modifier.align(Alignment.TopStart).padding(15.dp).size(34.dp).border(2.dp, CivicColors.Cyan, RoundedCornerShape(10.dp)))
+                Box(Modifier.align(Alignment.BottomEnd).padding(15.dp).size(34.dp).border(2.dp, CivicColors.Cyan, RoundedCornerShape(10.dp)))
+            }
+            Spacer(Modifier.height(14.dp))
+            CivicHeroSurface(Modifier.fillMaxWidth(), accent = CivicColors.Cyan) {
+                Column {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Box(Modifier.size(42.dp).clip(RoundedCornerShape(14.dp)).background(CivicColors.Cyan.copy(alpha = .18f)), contentAlignment = Alignment.Center) {
+                            Icon(Icons.Default.SmartToy, null, tint = CivicColors.Cyan, modifier = Modifier.size(23.dp))
+                        }
+                        Spacer(Modifier.width(12.dp))
+                        Column(Modifier.weight(1f)) {
+                            Text("AI assistant", color = CivicColors.Muted, fontSize = 10.sp)
+                            Text(scan.first, color = CivicColors.Text, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                            Text(scan.second, color = CivicColors.Cyan, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+                        }
+                        Icon(Icons.Default.CheckCircle, null, tint = CivicColors.Green)
+                    }
+                    Spacer(Modifier.height(18.dp))
+                    CivicDivider()
+                    Spacer(Modifier.height(14.dp))
+                    Row(verticalAlignment = Alignment.Top) {
+                        Icon(Icons.Default.Place, null, tint = CivicColors.Muted, modifier = Modifier.size(18.dp))
+                        Spacer(Modifier.width(10.dp))
+                        Column(Modifier.weight(1f)) {
+                            Text("Location", color = CivicColors.Muted, fontSize = 10.sp)
+                            Text(scan.third, color = CivicColors.Text, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                        }
+                        Text("Change", color = CivicColors.Cyan, fontSize = 11.sp, fontWeight = FontWeight.Bold, modifier = Modifier.clickable { scanIndex = (scanIndex + 1) % scanOptions.size })
+                    }
+                }
+            }
+            Spacer(Modifier.height(14.dp))
+            TextField(
+                value = details,
+                onValueChange = { if (it.length <= 120) details = it },
+                placeholder = { Text("Add a short description (optional)", color = CivicColors.MutedDark, fontSize = 12.sp) },
+                modifier = Modifier.fillMaxWidth(),
+                minLines = 2,
+                colors = TextFieldDefaults.colors(focusedContainerColor = CivicColors.Panel, unfocusedContainerColor = CivicColors.Panel, focusedIndicatorColor = CivicColors.Cyan, unfocusedIndicatorColor = CivicColors.Border),
+            )
+            Text("${details.length}/120", color = CivicColors.MutedDark, fontSize = 10.sp, modifier = Modifier.align(Alignment.End).padding(top = 4.dp))
             Spacer(Modifier.height(18.dp))
             PrimaryButton("Confirm & Submit", Modifier.fillMaxWidth()) {
                 viewModel.submit(
@@ -316,7 +354,7 @@ fun ReportIssueScreen(navController: NavHostController, viewModel: ReportViewMod
             }
             Spacer(Modifier.height(10.dp))
             SecondaryButton("Retake Photo", Modifier.fillMaxWidth()) { scanIndex = (scanIndex + 1) % scanOptions.size }
-            Spacer(Modifier.height(20.dp))
+            Spacer(Modifier.height(28.dp))
         }
     }
 }
@@ -402,16 +440,25 @@ fun MapViewScreen(navController: NavHostController, viewModel: MapViewModel = vi
         )
     }
     ScreenScaffold(navController, Routes.Map) { padding ->
-        Column(Modifier.fillMaxSize().padding(padding).padding(horizontal = 14.dp)) {
-            Row(Modifier.fillMaxWidth().padding(top = 10.dp), verticalAlignment = Alignment.CenterVertically) {
-                Text("CivicLens", color = CivicColors.CyanBright, fontSize = 16.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+        Column(
+            Modifier
+                .fillMaxSize()
+                .padding(padding)
+                .padding(horizontal = 18.dp),
+        ) {
+            Row(Modifier.fillMaxWidth().padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.weight(1f)) {
+                    Text("Explore Kolkata", color = CivicColors.Text, fontSize = 21.sp, fontWeight = FontWeight.Bold)
+                    Text("${visibleIssues.size} issues in view", color = CivicColors.Muted, fontSize = 11.sp)
+                }
                 ThemeToggleButton()
                 IconButton(onClick = { showFilters = true }) { Icon(Icons.Default.FilterList, "Filter", tint = CivicColors.Text) }
             }
+            Spacer(Modifier.height(14.dp))
             BasicTextField(
                 value = query,
                 onValueChange = { query = it },
-                modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(CivicColors.Panel).border(1.dp, CivicColors.Border, RoundedCornerShape(12.dp)).padding(13.dp),
+                modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(22.dp)).background(CivicColors.Panel).border(1.dp, CivicColors.Border.copy(alpha = .55f), RoundedCornerShape(22.dp)).padding(horizontal = 15.dp, vertical = 13.dp),
                 textStyle = androidx.compose.ui.text.TextStyle(color = CivicColors.Muted, fontSize = 12.sp),
                 singleLine = true,
                 decorationBox = { innerTextField ->
@@ -426,13 +473,35 @@ fun MapViewScreen(navController: NavHostController, viewModel: MapViewModel = vi
                 },
             )
             Spacer(Modifier.height(12.dp))
-            MapPreview(Modifier.fillMaxWidth().height(270.dp))
-            Spacer(Modifier.height(18.dp))
-            SectionHeader("Nearby Issues", filter) { showFilters = true }
-            Spacer(Modifier.height(10.dp))
-             visibleIssues.forEach { issue ->
-                 IssueRow(issue.toCivicIssue()) { navController.navigate("${Routes.IssueDetails}/${issue.id}") }
-                Spacer(Modifier.height(9.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                listOf("All", "Pending", "Verified", "Resolved").forEach { option ->
+                    StatusChip(option, if (filter == option) CivicColors.Cyan else CivicColors.MutedDark, Modifier.clickable { filter = option })
+                }
+            }
+            Spacer(Modifier.height(14.dp))
+            Box(Modifier.fillMaxWidth().height(318.dp)) {
+                MapPreview(Modifier.fillMaxSize())
+                Box(
+                    Modifier
+                        .align(Alignment.BottomEnd)
+                        .padding(16.dp)
+                        .size(46.dp)
+                        .clip(CircleShape)
+                        .background(CivicColors.Panel)
+                        .border(1.dp, CivicColors.Border, CircleShape),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(Icons.Default.Place, "Current area", tint = CivicColors.Cyan)
+                }
+            }
+            CivicHeroSurface(Modifier.fillMaxWidth().padding(top = 0.dp), accent = CivicColors.Green) {
+                Column {
+                    SectionHeader("Nearby Issues", filter) { showFilters = true }
+                    Spacer(Modifier.height(6.dp))
+                    visibleIssues.forEach { issue ->
+                        IssueLine(issue.toCivicIssue()) { navController.navigate("${Routes.IssueDetails}/${issue.id}") }
+                    }
+                }
             }
              if (visibleIssues.isEmpty()) {
                  CivicEmptyState(
@@ -442,6 +511,7 @@ fun MapViewScreen(navController: NavHostController, viewModel: MapViewModel = vi
                      onAction = { navController.navigate(Routes.Report) },
                  )
              }
+            Spacer(Modifier.height(112.dp))
         }
     }
 }
@@ -607,34 +677,46 @@ fun ProfileRewardsScreen(navController: NavHostController, viewModel: ProfileVie
         )
     }
     ScreenScaffold(navController, Routes.Profile) { padding ->
-        Column(Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState()).padding(horizontal = 18.dp)) {
+        Column(Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState()).padding(horizontal = 20.dp)) {
             Row(Modifier.fillMaxWidth().padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-                Text("My Profile", color = CivicColors.Text, fontSize = 20.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
+                Text("Civic identity", color = CivicColors.Text, fontSize = 22.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
                 ThemeToggleButton()
                 IconButton(onClick = { showSettings = true }) { Icon(Icons.Default.Settings, "Settings", tint = CivicColors.Text) }
             }
-            Row(Modifier.padding(top = 10.dp), verticalAlignment = Alignment.CenterVertically) {
-                Avatar(Modifier.size(58.dp))
-                Spacer(Modifier.width(12.dp))
+            Spacer(Modifier.height(18.dp))
+            CivicHeroSurface(Modifier.fillMaxWidth(), accent = CivicColors.Amber) {
                 Column {
-                    Text(user?.name ?: "Ayushi Mandal", color = CivicColors.Text, fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
-                    Text(user?.location ?: "Kolkata, India", color = CivicColors.Muted, fontSize = 11.sp)
-                    Text("Level ${user?.level ?: 4} · Civic Contributor", color = CivicColors.CyanBright, fontSize = 10.sp)
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Avatar(Modifier.size(68.dp))
+                        Spacer(Modifier.width(14.dp))
+                        Column(Modifier.weight(1f)) {
+                            Text(user?.name ?: "Ayushi Mandal", color = CivicColors.Text, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                            Text(user?.location ?: "Kolkata, India", color = CivicColors.Muted, fontSize = 11.sp)
+                            Spacer(Modifier.height(6.dp))
+                            StatusChip("Level ${user?.level ?: 4} - Civic Contributor", CivicColors.Cyan)
+                        }
+                    }
+                    Spacer(Modifier.height(22.dp))
+                    Row(verticalAlignment = Alignment.Bottom) {
+                        Column(Modifier.weight(1f)) {
+                            Text((user?.civicPoints ?: 0).toString(), color = CivicColors.Text, fontSize = 42.sp, fontWeight = FontWeight.Bold)
+                            Text("Civic points - top 18% in Kolkata", color = CivicColors.CyanBright, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+                        }
+                        Icon(Icons.Default.EmojiEvents, null, tint = CivicColors.Amber, modifier = Modifier.size(62.dp))
+                    }
                 }
             }
-            Spacer(Modifier.height(18.dp))
-            PointsCard(user)
-            Spacer(Modifier.height(18.dp))
+            Spacer(Modifier.height(24.dp))
             SectionHeader("Your Impact")
             Spacer(Modifier.height(10.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(9.dp)) {
-                 StatTile((user?.issuesReported ?: 24).toString(), "Issues Reported", CivicColors.Coral, Modifier.weight(1f))
-                 StatTile((user?.issuesVerified ?: 18).toString(), "Verified", CivicColors.CyanBright, Modifier.weight(1f))
-                 StatTile((user?.issuesResolved ?: 8).toString(), "Resolved", CivicColors.Lime, Modifier.weight(1f))
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                OpenMetric((user?.issuesReported ?: 24).toString(), "reported", CivicColors.Coral)
+                OpenMetric((user?.issuesVerified ?: 18).toString(), "verified", CivicColors.CyanBright)
+                OpenMetric((user?.issuesResolved ?: 8).toString(), "resolved", CivicColors.Lime)
             }
-            Spacer(Modifier.height(20.dp))
-            SectionHeader("Badges", "View All") {}
-            Spacer(Modifier.height(11.dp))
+            Spacer(Modifier.height(22.dp))
+            SectionHeader("Achievements", "View all") {}
+            Spacer(Modifier.height(13.dp))
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                 val badges: List<Pair<androidx.compose.ui.graphics.vector.ImageVector, Color>> = listOf(
                     Icons.Default.Shield to CivicColors.Cyan,
@@ -643,16 +725,19 @@ fun ProfileRewardsScreen(navController: NavHostController, viewModel: ProfileVie
                     Icons.Default.CheckCircle to CivicColors.Green,
                 )
                 badges.forEach { (icon, tint) ->
-                    Box(Modifier.size(53.dp).clip(CircleShape).background(tint.copy(alpha = .13f)).border(1.dp, tint.copy(alpha = .7f), CircleShape), contentAlignment = Alignment.Center) { Icon(icon, null, tint = tint, modifier = Modifier.size(28.dp)) }
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Box(Modifier.size(58.dp).clip(CircleShape).background(tint.copy(alpha = .14f)), contentAlignment = Alignment.Center) {
+                            Icon(icon, null, tint = tint, modifier = Modifier.size(28.dp))
+                        }
+                    }
                 }
             }
-            Spacer(Modifier.height(22.dp))
+            Spacer(Modifier.height(24.dp))
             LeaderboardCard()
-            Spacer(Modifier.height(20.dp))
+            Spacer(Modifier.height(112.dp))
         }
     }
 }
-
 @Composable
 private fun PointsCard(user: UserEntity?) {
     GlassCard(Modifier.fillMaxWidth().background(CivicColors.Purple.copy(alpha = .22f), RoundedCornerShape(18.dp))) {
@@ -660,7 +745,7 @@ private fun PointsCard(user: UserEntity?) {
             Column(Modifier.weight(1f)) {
                 Text("Civic Points", color = CivicColors.Muted, fontSize = 11.sp)
                 Text((user?.civicPoints ?: 0).toString(), color = CivicColors.Text, fontSize = 29.sp, fontWeight = FontWeight.Bold)
-                Text("Level ${user?.level ?: 1} · Keep improving Kolkata", color = CivicColors.CyanBright, fontSize = 10.sp)
+                Text("Level ${user?.level ?: 1} - Keep improving Kolkata", color = CivicColors.CyanBright, fontSize = 10.sp)
             }
             Icon(Icons.Default.EmojiEvents, null, tint = CivicColors.Amber, modifier = Modifier.size(58.dp))
         }
@@ -692,53 +777,51 @@ fun ActivityScreen(navController: NavHostController, viewModel: ActivityViewMode
     val weeklyPoints = weekActivities.sumOf { it.points }
     val weeklyPlaces = weekActivities.mapNotNull { it.issueId }.distinct().size
     ScreenScaffold(navController, Routes.Activity, "Activity") { padding ->
-        Column(Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState()).padding(horizontal = 18.dp)) {
-            Text("Your civic journey", color = CivicColors.Muted, fontSize = 12.sp, modifier = Modifier.padding(top = 8.dp))
-            Spacer(Modifier.height(16.dp))
-            GlassCard(Modifier.fillMaxWidth()) {
+        Column(Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState()).padding(horizontal = 20.dp)) {
+            EditorialHeader(
+                eyebrow = "Personal impact",
+                title = "Your civic\njourney",
+                subtitle = "Every report, verification, and resolved issue adds to the public record.",
+                modifier = Modifier.padding(top = 8.dp),
+            )
+            Spacer(Modifier.height(22.dp))
+            CivicHeroSurface(Modifier.fillMaxWidth(), accent = CivicColors.Cyan) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Box(Modifier.size(38.dp).clip(RoundedCornerShape(12.dp)).background(CivicColors.Cyan.copy(alpha = .15f)), contentAlignment = Alignment.Center) {
-                        Icon(Icons.Default.Wifi, null, tint = CivicColors.Cyan)
-                    }
-                    Spacer(Modifier.width(11.dp))
+                    Icon(Icons.Default.Wifi, null, tint = CivicColors.Cyan, modifier = Modifier.size(34.dp))
+                    Spacer(Modifier.width(14.dp))
                     Column(Modifier.weight(1f)) {
-                        Text("Weekly civic impact", color = CivicColors.Text, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
-                        Text("You helped improve $weeklyPlaces places this week.", color = CivicColors.Muted, fontSize = 10.sp)
+                        Text("This week", color = CivicColors.Muted, fontSize = 11.sp)
+                        Text("Improved $weeklyPlaces places", color = CivicColors.Text, fontSize = 18.sp, fontWeight = FontWeight.Bold)
                     }
-                    Text("+$weeklyPoints", color = CivicColors.Lime, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                    Text("+$weeklyPoints", color = CivicColors.Lime, fontSize = 22.sp, fontWeight = FontWeight.Bold)
                 }
             }
-            Spacer(Modifier.height(21.dp))
-            SectionHeader("Recent Activity")
-            Spacer(Modifier.height(10.dp))
-             activities.take(3).forEach { activity ->
-                 IssueRow(activity.toCivicIssue()) { navController.navigate("${Routes.IssueDetails}/${activity.issueId ?: 1}") }
-                Spacer(Modifier.height(9.dp))
+            Spacer(Modifier.height(24.dp))
+            SectionHeader("Today")
+            activities.take(3).forEach { activity ->
+                TimelineEntry(
+                    title = activity.title,
+                    subtitle = "${activity.description} - ${formatCivicDate(activity.timestamp)}",
+                    points = "+${activity.points} pts",
+                    tint = activity.toCivicIssue().statusColor,
+                ) { navController.navigate("${Routes.IssueDetails}/${activity.issueId ?: 1}") }
             }
-            Spacer(Modifier.height(12.dp))
+            Spacer(Modifier.height(6.dp))
             SectionHeader("Earlier")
-            Spacer(Modifier.height(10.dp))
-             activities.drop(3).forEach { activity ->
-                GlassCard(Modifier.fillMaxWidth()) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Default.CheckCircle, null, tint = CivicColors.Green, modifier = Modifier.size(22.dp))
-                        Spacer(Modifier.width(10.dp))
-                        Column(Modifier.weight(1f)) {
-                             Text(activity.title, color = CivicColors.Text, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
-                             Text("${activity.description} · ${formatCivicDate(activity.timestamp)}", color = CivicColors.Muted, fontSize = 10.sp)
-                        }
-                         Text("+${activity.points}", color = CivicColors.Lime, fontSize = 11.sp, fontWeight = FontWeight.Bold)
-                    }
-                }
-                Spacer(Modifier.height(9.dp))
+            activities.drop(3).forEach { activity ->
+                TimelineEntry(
+                    title = activity.title,
+                    subtitle = "${activity.description} - ${formatCivicDate(activity.timestamp)}",
+                    points = "+${activity.points}",
+                    tint = activity.toCivicIssue().statusColor,
+                ) { navController.navigate("${Routes.IssueDetails}/${activity.issueId ?: 1}") }
             }
-             if (activities.isEmpty()) {
-                 CivicEmptyState("Your civic journey starts here", "Report or verify an issue to see your impact appear in this timeline.")
-             }
-            Spacer(Modifier.height(20.dp))
+            if (activities.isEmpty()) {
+                CivicEmptyState("Your civic journey starts here", "Report or verify an issue to see your impact appear in this timeline.")
+            }
+            Spacer(Modifier.height(112.dp))
         }
     }
 }
-
 private fun formatCivicDate(timestamp: Long): String =
     SimpleDateFormat("dd MMM yyyy, h:mm a", Locale.getDefault()).format(Date(timestamp))
