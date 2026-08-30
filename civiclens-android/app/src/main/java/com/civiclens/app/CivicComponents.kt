@@ -3,7 +3,9 @@ package com.civiclens.app
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -44,21 +46,27 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
+import kotlinx.coroutines.delay
 
 @Composable
 fun CivicBackground(content: @Composable () -> Unit) {
@@ -68,37 +76,50 @@ fun CivicBackground(content: @Composable () -> Unit) {
 }
 
 @Composable
-fun CivicLensLogo(compact: Boolean = false) {
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        Box(
-            modifier = Modifier
-                .size(if (compact) 30.dp else 66.dp)
-                .clip(CircleShape)
-                .background(CivicColors.Panel),
-            contentAlignment = Alignment.Center,
-        ) {
-            Canvas(modifier = Modifier.size(if (compact) 22.dp else 46.dp)) {
-                val center = Offset(size.width / 2, size.height / 2)
-                drawCircle(
-                    color = CivicColors.Cyan,
-                    radius = size.minDimension * .36f,
-                    style = Stroke(width = 5.dp.toPx()),
-                )
-                drawArc(
-                    color = CivicColors.Text,
-                    startAngle = 35f,
-                    sweepAngle = 210f,
-                    useCenter = false,
-                    topLeft = Offset(size.width * .2f, size.height * .2f),
-                    size = androidx.compose.ui.geometry.Size(size.width * .6f, size.height * .6f),
-                    style = Stroke(width = 3.dp.toPx(), cap = StrokeCap.Round),
-                )
-                drawCircle(CivicColors.Cyan, 4.dp.toPx(), center)
-            }
-        }
-        if (!compact) {
-            Spacer(Modifier.width(10.dp))
-            Text("CivicLens", color = CivicColors.Text, fontSize = 28.sp, fontWeight = FontWeight.Bold)
+fun CivicLensLogo(compact: Boolean = false, modifier: Modifier = Modifier) {
+    val logoResource = when {
+        compact -> R.drawable.civiclens_mark
+        CivicColors.useDarkMode -> R.drawable.civiclens_wordmark_dark
+        else -> R.drawable.civiclens_wordmark_light
+    }
+    Image(
+        painter = painterResource(logoResource),
+        contentDescription = "CivicLens",
+        contentScale = ContentScale.Fit,
+        modifier = if (compact) modifier.size(30.dp) else modifier.width(244.dp).height(82.dp),
+    )
+}
+
+@Composable
+fun BrandedLaunchScreen(onFinished: () -> Unit) {
+    var revealed by remember { mutableStateOf(false) }
+    var exiting by remember { mutableStateOf(false) }
+    val launchAlpha by animateFloatAsState(
+        targetValue = if (exiting) 0f else if (revealed) 1f else 0f,
+        animationSpec = tween(if (exiting) 180 else 420),
+        label = "brand-launch-alpha",
+    )
+    val scale by animateFloatAsState(
+        targetValue = if (exiting) 1.025f else if (revealed) 1f else .94f,
+        animationSpec = tween(if (exiting) 180 else 520),
+        label = "brand-launch-scale",
+    )
+    LaunchedEffect(Unit) {
+        revealed = true
+        delay(850)
+        exiting = true
+        delay(180)
+        onFinished()
+    }
+    CivicBackground {
+        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            CivicLensLogo(
+                modifier = Modifier.graphicsLayer {
+                    alpha = launchAlpha
+                    scaleX = scale
+                    scaleY = scale
+                },
+            )
         }
     }
 }
@@ -347,7 +368,7 @@ fun CivicHeroSurface(
 
 @Composable
 fun EditorialHeader(
-    eyebrow: String,
+    eyebrow: String?,
     title: String,
     subtitle: String? = null,
     modifier: Modifier = Modifier,
@@ -355,7 +376,11 @@ fun EditorialHeader(
 ) {
     Row(modifier.fillMaxWidth(), verticalAlignment = Alignment.Top) {
         Column(Modifier.weight(1f)) {
-            Text(eyebrow, color = CivicColors.CyanBright, fontSize = 13.sp, fontWeight = FontWeight.Bold)
+            if (eyebrow == null) {
+                CivicLensLogo(compact = true)
+            } else {
+                Text(eyebrow, color = CivicColors.CyanBright, fontSize = 13.sp, fontWeight = FontWeight.Bold)
+            }
             Spacer(Modifier.height(8.dp))
             Text(title, color = CivicColors.Text, fontSize = 28.sp, fontWeight = FontWeight.Bold, lineHeight = 32.sp)
             if (subtitle != null) {

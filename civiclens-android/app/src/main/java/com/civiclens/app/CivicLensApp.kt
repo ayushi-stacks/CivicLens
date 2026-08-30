@@ -8,6 +8,7 @@ import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
@@ -25,9 +26,11 @@ val LocalCivicThemeActions = compositionLocalOf { CivicThemeActions(false) {} }
 @Composable
 fun CivicLensApp() {
     val navController = rememberNavController()
-    var darkMode by rememberSaveable { mutableStateOf(false) }
+    val systemDarkMode = isSystemInDarkTheme()
+    var darkMode by rememberSaveable { mutableStateOf(systemDarkMode) }
+    var showBrandLaunch by remember { mutableStateOf(true) }
     CivicColors.useDarkMode = darkMode
-    val colorScheme = if (darkMode || isSystemInDarkTheme() && darkMode) {
+    val colorScheme = if (darkMode) {
         darkColorScheme(
             primary = CivicColors.Cyan,
             onPrimary = CivicColors.Text,
@@ -66,28 +69,32 @@ fun CivicLensApp() {
         androidx.compose.runtime.CompositionLocalProvider(
             LocalCivicThemeActions provides CivicThemeActions(darkMode) { darkMode = !darkMode },
         ) {
-            NavHost(
-                navController = navController,
-                startDestination = Routes.Onboarding,
-            ) {
-                composable(Routes.Onboarding) { OnboardingScreen(navController) }
-                composable(Routes.Home) { HomeScreen(navController) }
-                composable(Routes.Report) { ReportIssueScreen(navController) }
-                composable("${Routes.IssueDetails}/{issueId}") { entry ->
-                    IssueDetailsScreen(navController, entry.arguments?.getString("issueId")?.toLongOrNull() ?: 1)
+            if (showBrandLaunch) {
+                BrandedLaunchScreen { showBrandLaunch = false }
+            } else {
+                NavHost(
+                    navController = navController,
+                    startDestination = Routes.Onboarding,
+                ) {
+                    composable(Routes.Onboarding) { OnboardingScreen(navController) }
+                    composable(Routes.Home) { HomeScreen(navController) }
+                    composable(Routes.Report) { ReportIssueScreen(navController) }
+                    composable("${Routes.IssueDetails}/{issueId}") { entry ->
+                        IssueDetailsScreen(navController, entry.arguments?.getString("issueId")?.toLongOrNull() ?: 1)
+                    }
+                    composable(Routes.IssueDetails) { IssueDetailsScreen(navController, 1) }
+                    composable(Routes.Map) { MapViewScreen(navController) }
+                    composable("${Routes.Verification}/{issueId}") { entry ->
+                        VerificationScreen(navController, entry.arguments?.getString("issueId")?.toLongOrNull() ?: 1)
+                    }
+                    composable(Routes.Verification) { VerificationScreen(navController, 1) }
+                    composable("${Routes.Resolution}/{issueId}") { entry ->
+                        ResolutionDetailsScreen(navController, entry.arguments?.getString("issueId")?.toLongOrNull() ?: 1)
+                    }
+                    composable(Routes.Resolution) { ResolutionDetailsScreen(navController, 1) }
+                    composable(Routes.Profile) { ProfileRewardsScreen(navController) }
+                    composable(Routes.Activity) { ActivityScreen(navController) }
                 }
-                composable(Routes.IssueDetails) { IssueDetailsScreen(navController, 1) }
-                composable(Routes.Map) { MapViewScreen(navController) }
-                composable("${Routes.Verification}/{issueId}") { entry ->
-                    VerificationScreen(navController, entry.arguments?.getString("issueId")?.toLongOrNull() ?: 1)
-                }
-                composable(Routes.Verification) { VerificationScreen(navController, 1) }
-                composable("${Routes.Resolution}/{issueId}") { entry ->
-                    ResolutionDetailsScreen(navController, entry.arguments?.getString("issueId")?.toLongOrNull() ?: 1)
-                }
-                composable(Routes.Resolution) { ResolutionDetailsScreen(navController, 1) }
-                composable(Routes.Profile) { ProfileRewardsScreen(navController) }
-                composable(Routes.Activity) { ActivityScreen(navController) }
             }
         }
     }
@@ -113,7 +120,7 @@ object CivicColors {
     val Panel get() = if (useDarkMode) Color(0xFF10201E) else Color(0xFFFFFDF8)
     val PanelSoft get() = if (useDarkMode) Color(0xFF172B28) else Color(0xFFF1F2E8)
     val PanelMuted get() = if (useDarkMode) Color(0xFF223A35) else Color(0xFFE2EADD)
-    val NavPill get() = if (useDarkMode) Color(0xFF0E2422) else Color(0xFFFFFDF8)
+    val NavPill get() = if (useDarkMode) Color(0xFF0E2422) else Color(0xFFDDEBE5)
     val NavIcon get() = if (useDarkMode) Color(0xFF718986) else Color(0xFF70807B)
     val Cyan get() = if (useDarkMode) Color(0xFF1CE5D0) else Color(0xFF128E78)
     val CyanBright get() = if (useDarkMode) Color(0xFF6AFBE8) else Color(0xFF0A9E87)

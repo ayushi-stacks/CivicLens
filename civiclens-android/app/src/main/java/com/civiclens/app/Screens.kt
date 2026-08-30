@@ -166,7 +166,7 @@ fun HomeScreen(navController: NavHostController, viewModel: HomeViewModel = view
                 .padding(horizontal = 20.dp),
         ) {
             EditorialHeader(
-                eyebrow = "CivicLens",
+                eyebrow = null,
                 title = "Good morning,\n${user.user?.name?.substringBefore(" ") ?: "Ayushi"}",
                 subtitle = "Kolkata looks better when citizens and city teams see the same truth.",
                 modifier = Modifier.padding(top = 8.dp),
@@ -580,7 +580,8 @@ fun MapViewScreen(navController: NavHostController, viewModel: MapViewModel = vi
                     Icon(Icons.Default.Place, "Current area", tint = CivicColors.Cyan)
                 }
             }
-            CivicHeroSurface(Modifier.fillMaxWidth().padding(top = 0.dp), accent = CivicColors.Green) {
+            Spacer(Modifier.height(14.dp))
+            CivicHeroSurface(Modifier.fillMaxWidth(), accent = CivicColors.Green) {
                 Column {
                     SectionHeader("Nearby Issues", filter) { showFilters = true }
                     Spacer(Modifier.height(6.dp))

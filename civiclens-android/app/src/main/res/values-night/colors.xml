@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="civiclens_navy">#FBF8EF</color>
-    <color name="civiclens_cyan">#19C4CC</color>
+    <color name="civiclens_navy">#061010</color>
+    <color name="civiclens_cyan">#1CE5D0</color>
     <color name="civiclens_launcher_background">#0C2A31</color>
 </resources>
