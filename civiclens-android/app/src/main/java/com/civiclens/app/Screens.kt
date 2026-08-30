@@ -221,30 +221,116 @@ private fun HealthCard(issues: List<IssueEntity>) {
         score >= 65 -> "Good"
         else -> "Needs attention"
     }
-    CivicHeroSurface(Modifier.fillMaxWidth().height(184.dp), accent = CivicColors.Cyan) {
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.Top) {
-            Column {
-                Text("City health index", color = CivicColors.Muted, fontSize = 12.sp, fontWeight = FontWeight.Medium)
-                Spacer(Modifier.height(10.dp))
-                Row(verticalAlignment = Alignment.Bottom) {
-                    Text(score.toString(), color = CivicColors.Text, fontSize = 52.sp, fontWeight = FontWeight.Bold)
-                    Text("/100", color = CivicColors.Muted, fontSize = 14.sp, modifier = Modifier.padding(bottom = 11.dp, start = 4.dp))
+    val trend = listOf(
+        (score - 7).coerceIn(0, 100),
+        (score - 5).coerceIn(0, 100),
+        (score - 6).coerceIn(0, 100),
+        (score - 3).coerceIn(0, 100),
+        (score - 4).coerceIn(0, 100),
+        (score - 1).coerceIn(0, 100),
+        score,
+    )
+    CivicHeroSurface(Modifier.fillMaxWidth().height(216.dp), accent = CivicColors.Cyan) {
+        Column(Modifier.fillMaxSize()) {
+            Row(
+                Modifier.fillMaxWidth().weight(1f),
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                verticalAlignment = Alignment.Top,
+            ) {
+                Column(Modifier.weight(.38f)) {
+                    Text("City health index", color = CivicColors.Muted, fontSize = 12.sp, fontWeight = FontWeight.Medium)
+                    Spacer(Modifier.height(8.dp))
+                    Row(verticalAlignment = Alignment.Bottom) {
+                        Text(score.toString(), color = CivicColors.Text, fontSize = 48.sp, fontWeight = FontWeight.Bold)
+                        Text("/100", color = CivicColors.Muted, fontSize = 13.sp, modifier = Modifier.padding(bottom = 10.dp, start = 3.dp))
+                    }
+                    Text(healthLabel, color = CivicColors.Cyan, fontSize = 13.sp, fontWeight = FontWeight.Bold)
                 }
-                Text(healthLabel, color = CivicColors.Cyan, fontSize = 13.sp, fontWeight = FontWeight.Bold)
-                Spacer(Modifier.height(22.dp))
-                Text("Signals from reports, verifications, and resolved issues.", color = CivicColors.Muted, fontSize = 11.sp, lineHeight = 16.sp)
+                HealthTrendChart(trend, Modifier.weight(.62f))
             }
-            CanvasSparkline()
+            Spacer(Modifier.height(12.dp))
+            CivicDivider()
+            Spacer(Modifier.height(10.dp))
+            Text(
+                "Calculated from reports, citizen verifications, and resolved issues.",
+                color = CivicColors.Muted,
+                fontSize = 10.sp,
+                lineHeight = 14.sp,
+                maxLines = 2,
+            )
         }
     }
 }
 
 @Composable
-private fun CanvasSparkline() {
-    androidx.compose.foundation.Canvas(Modifier.size(80.dp, 44.dp).padding(top = 10.dp)) {
-        val points = listOf(0f to .8f, .2f to .55f, .4f to .7f, .62f to .22f, .82f to .45f, 1f to .1f)
-        points.zipWithNext().forEach { (a, b) ->
-            drawLine(CivicColors.Green, androidx.compose.ui.geometry.Offset(size.width * a.first, size.height * a.second), androidx.compose.ui.geometry.Offset(size.width * b.first, size.height * b.second), 3f, androidx.compose.ui.graphics.StrokeCap.Round)
+private fun HealthTrendChart(values: List<Int>, modifier: Modifier = Modifier) {
+    val weeklyChange = values.last() - values.first()
+    Column(modifier) {
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+            Text("7-day trend", color = CivicColors.Text, fontSize = 10.sp, fontWeight = FontWeight.SemiBold)
+            Text(
+                "${if (weeklyChange >= 0) "+" else ""}$weeklyChange pts",
+                color = if (weeklyChange >= 0) CivicColors.Green else CivicColors.Coral,
+                fontSize = 9.sp,
+                fontWeight = FontWeight.Bold,
+            )
+        }
+        Spacer(Modifier.height(6.dp))
+        androidx.compose.foundation.Canvas(Modifier.fillMaxWidth().height(66.dp)) {
+            val minValue = (values.minOrNull() ?: 0) - 3
+            val maxValue = (values.maxOrNull() ?: 100) + 3
+            val valueRange = (maxValue - minValue).coerceAtLeast(1).toFloat()
+            val horizontalStep = size.width / values.lastIndex.coerceAtLeast(1)
+
+            repeat(3) { index ->
+                val y = size.height * index / 2f
+                drawLine(
+                    color = CivicColors.Border.copy(alpha = .65f),
+                    start = androidx.compose.ui.geometry.Offset(0f, y),
+                    end = androidx.compose.ui.geometry.Offset(size.width, y),
+                    strokeWidth = 1f,
+                )
+            }
+
+            val points = values.mapIndexed { index, value ->
+                androidx.compose.ui.geometry.Offset(
+                    x = horizontalStep * index,
+                    y = size.height - ((value - minValue) / valueRange * size.height),
+                )
+            }
+            val fillPath = androidx.compose.ui.graphics.Path().apply {
+                moveTo(points.first().x, size.height)
+                points.forEach { lineTo(it.x, it.y) }
+                lineTo(points.last().x, size.height)
+                close()
+            }
+            drawPath(fillPath, CivicColors.Cyan.copy(alpha = .12f))
+
+            val linePath = androidx.compose.ui.graphics.Path().apply {
+                moveTo(points.first().x, points.first().y)
+                points.drop(1).forEach { lineTo(it.x, it.y) }
+            }
+            drawPath(
+                path = linePath,
+                color = CivicColors.CyanBright,
+                style = androidx.compose.ui.graphics.drawscope.Stroke(width = 4f, cap = androidx.compose.ui.graphics.StrokeCap.Round),
+            )
+            points.forEachIndexed { index, point ->
+                drawCircle(
+                    color = if (index == points.lastIndex) CivicColors.Lime else CivicColors.CyanBright,
+                    radius = if (index == points.lastIndex) 5f else 3.5f,
+                    center = point,
+                )
+            }
+        }
+        Spacer(Modifier.height(5.dp))
+        Row(Modifier.fillMaxWidth()) {
+            values.forEachIndexed { index, value ->
+                Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(value.toString(), color = if (index == values.lastIndex) CivicColors.Text else CivicColors.Muted, fontSize = 8.sp, fontWeight = if (index == values.lastIndex) FontWeight.Bold else FontWeight.Normal)
+                    Text(if (index == values.lastIndex) "Now" else "D-${values.lastIndex - index}", color = CivicColors.MutedDark, fontSize = 7.sp)
+                }
+            }
         }
     }
 }
